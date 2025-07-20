@@ -1,0 +1,128 @@
+# fastapi\_watchlog\_apm
+
+🔗 **Website**: [https://watchlog.io](https://watchlog.io)
+
+**fastapi\_watchlog\_apm** is a lightweight APM integration for FastAPI, built on OpenTelemetry. It provides:
+
+* **Auto‑instrumentation** for FastAPI endpoints and underlying HTTP calls
+* **Manual custom spans** via OpenTelemetry API
+* **OTLP exporters** over HTTP (protobuf) for compact transport
+* **Environment detection** (local vs in‑cluster Kubernetes)
+* **Configurable sampling**, error‑only and slow‑only span export
+* **Metrics collection** via OTLP
+
+---
+
+## Installation
+
+Install from PyPI:
+
+```bash
+pip install fastapi-apm-watchlog
+```
+
+Or directly from GitHub:
+
+```bash
+pip install git+https://github.com/Watchlog-monitoring/fastapi-apm-watchlog.git
+```
+
+---
+
+## Quick Start
+
+Initialize the APM **before** mounting any routes:
+
+```python
+# main.py
+from fastapi import FastAPI
+from fastapi-apm-watchlog import instrument
+
+app = FastAPI()
+
+# 1) Initialize Watchlog APM
+instrument(
+    app,
+    service_name='my-fastapi-app',  # your service name
+    error_tps=5,                    # max 5 error spans/sec
+    send_error_spans=True,          # always send error spans
+    slow_threshold_ms=300,          # always send spans >300ms
+    sample_rate=1.0                 # random sample rate (0.0–1.0, capped at 0.3)
+)
+
+# 2) Define your routes
+@app.get('/')
+async def read_root():
+    return {'message': 'Hello Watchlog APM + FastAPI'}
+
+# 3) Run your app
+# uvicorn main:app --reload
+```
+
+**What happens?**
+
+1. FastAPI and HTTP calls are auto‑instrumented for tracing.
+2. Spans and metrics are exported to the Watchlog agent (local or Kubernetes).
+3. Custom filter rules (error‑only, slow‑only, sampling) apply.
+
+---
+
+## Configuration Options
+
+| Parameter            | Type    | Default                     | Description                                                    |
+| -------------------- | ------- | --------------------------- | -------------------------------------------------------------- |
+| `service_name`       | `str`   | **required**                | Name of your FastAPI service                                   |
+| `otlp_endpoint`      | `str`   | `http://localhost:3774/apm` | Base OTLP URL (appends `/<service>/v1/traces` & `/v1/metrics`) |
+| `headers`            | `dict`  | `{}`                        | Additional HTTP headers for OTLP requests                      |
+| `batch_max_size`     | `int`   | `200`                       | Max spans per batch                                            |
+| `batch_delay_ms`     | `int`   | `5000`                      | Delay (ms) between batch exports                               |
+| `metric_interval_ms` | `int`   | `5000`                      | Interval (ms) for metric export                                |
+| `sample_rate`        | `float` | `1.0`                       | Random sampling rate (0.0–1.0, capped at **0.3**)              |
+| `send_error_spans`   | `bool`  | `False`                     | If `True`, always export spans with non-`UNSET` status         |
+| `error_tps`          | `int`   | `None`                      | Max error spans to export per second (`None` = unlimited)      |
+| `slow_threshold_ms`  | `int`   | `0`                         | If >0, always export spans slower than this threshold (ms)     |
+
+---
+
+## Manual Custom Spans
+
+Leverage OpenTelemetry API for custom instrumentation:
+
+```python
+from opentelemetry import trace
+
+@app.get('/db')
+async def fetch_db():
+    tracer = trace.get_tracer('watchlog-apm', '1.0.0')
+    span = tracer.start_span('db.query', attributes={'db.system':'postgresql'})
+    try:
+        # Execute your DB logic
+        result = await run_query()
+        return result
+    except Exception as e:
+        span.record_exception(e)
+        raise
+    finally:
+        span.end()
+```
+
+---
+
+## Environment Detection
+
+* **Local** (non‑K8s): sends to `http://127.0.0.1:3774/apm`
+* **Kubernetes** (in‑cluster): sends to `http://watchlog-python-agent.monitoring.svc.cluster.local:3774/apm`
+
+Detection checks:
+
+1. Kubernetes ServiceAccount token file
+2. `/proc/1/cgroup` for `kubepods`
+3. DNS lookup of `kubernetes.default.svc.cluster.local`
+
+---
+
+## License
+
+MIT © Mohammadreza
+
+Built for Watchlog.io# fastapi-apm-watchlog

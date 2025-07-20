@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/Watchlog-monitoring/fastapi_apm_watchlog/compare/v1.0.0...v1.0.1) (2025-07-20)
+
+
+### Bug Fixes
+
+* handle functions in import lib ([81b55b8](https://github.com/Watchlog-monitoring/fastapi_apm_watchlog/commit/81b55b88fa2bd6696606474825065ea9848817e2))
+
 # 1.0.0 (2025-07-20)
 
 

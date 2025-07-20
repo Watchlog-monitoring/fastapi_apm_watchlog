@@ -1,0 +1,68 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: ["*"]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write      # ← added
+
+jobs:
+  # فقط ساخت بسته
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install build tool
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build distribution
+        run: python -m build
+
+  # تگ‌گذاری و ریلیز روی GitHub
+  release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      issues:   write
+    steps:
+      - name: Checkout full history & tags
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install JS semantic-release
+        run: |
+          npm install -g semantic-release \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator \
+            @semantic-release/changelog \
+            @semantic-release/github \
+            @semantic-release/git
+
+      - name: Copy releaserc
+        run: cp .github/.releaserc.yml .
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: semantic-release

@@ -1,3 +1,10 @@
+# 1.0.0 (2025-07-20)
+
+
+### Features
+
+* first commit ([7ff5afc](https://github.com/Watchlog-monitoring/fastapi-apm-watchlog/commit/7ff5afcd499e60ad90b0cf9892dc483a31be80fd))
+
 ## [1.0.2](https://github.com/Watchlog-monitoring/fastapi_watchlog_apm/compare/v1.0.1...v1.0.2) (2025-07-16)
 
 

@@ -18,13 +18,13 @@
 Install from PyPI:
 
 ```bash
-pip install fastapi-apm-watchlog
+pip install fastapi_apm_watchlog
 ```
 
 Or directly from GitHub:
 
 ```bash
-pip install git+https://github.com/Watchlog-monitoring/fastapi-apm-watchlog.git
+pip install git+https://github.com/Watchlog-monitoring/fastapi_apm_watchlog.git
 ```
 
 ---
@@ -36,7 +36,7 @@ Initialize the APM **before** mounting any routes:
 ```python
 # main.py
 from fastapi import FastAPI
-from fastapi-apm-watchlog import instrument
+from fastapi_apm_watchlog import instrument
 
 app = FastAPI()
 
@@ -125,4 +125,4 @@ Detection checks:
 
 MIT © Mohammadreza
 
-Built for Watchlog.io# fastapi-apm-watchlog
+Built for Watchlog.io# fastapi_apm_watchlog

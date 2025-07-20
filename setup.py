@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name="fastapi-apm-watchlog",
     license="MIT",
-    version="1.0.0",
+    version="1.0.4",
     description="FastAPI instrumentation for Watchlog APM with JSON OTLP export",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Mohammadreza",
     author_email="mohammadnajm75@gmail.com",
-    url="https://github.com/Watchlog-monitoring/fastapi-apm-watchlog",
+    url="https://github.com/Watchlog-monitoring/fastapi_apm_watchlog",
     packages=find_packages(),
     install_requires=[
         "opentelemetry-api>=1.9.0",

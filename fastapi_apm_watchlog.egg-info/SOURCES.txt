@@ -2,8 +2,8 @@ LICENSE
 MANIFEST.in
 README.md
 setup.py
-fastapi-apm-watchlog/__init__.py
-fastapi-apm-watchlog/instrument.py
+fastapi_apm_watchlog/__init__.py
+fastapi_apm_watchlog/instrument.py
 fastapi_apm_watchlog.egg-info/PKG-INFO
 fastapi_apm_watchlog.egg-info/SOURCES.txt
 fastapi_apm_watchlog.egg-info/dependency_links.txt

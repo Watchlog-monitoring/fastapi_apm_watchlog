@@ -1,1 +1,1 @@
-fastapi-apm-watchlog
+fastapi_apm_watchlog

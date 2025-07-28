@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="fastapi-apm-watchlog",
     license="MIT",
-    version="1.0.4",
+    version="1.0.5",
     description="FastAPI instrumentation for Watchlog APM with JSON OTLP export",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

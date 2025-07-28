@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: fastapi-apm-watchlog
-Version: 1.0.4
+Version: 1.0.5
 Summary: FastAPI instrumentation for Watchlog APM with JSON OTLP export
 Home-page: https://github.com/Watchlog-monitoring/fastapi_apm_watchlog
 Author: Mohammadreza

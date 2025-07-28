@@ -48,33 +48,41 @@ class OTLPJsonSpanExporter(SpanExporter):
 
     def export(self, spans) -> SpanExportResult:
         try:
-            # 1) Build protobuf message
-            proto_req = encode_spans(spans)  # ExportTraceServiceRequest
+            proto_req = encode_spans(spans)
 
-            # 2) to Python dict using lowerCamelCase field names
             body = MessageToDict(
                 proto_req,
-                preserving_proto_field_name=False,   # <-- همین باعث میشه resourceSpans و scopeSpans بیاد
+                preserving_proto_field_name=False,
                 including_default_value_fields=False
             )
 
-            # 3) rename 'scopeSpans' -> 'instrumentationLibrarySpans'
-            for rs in body.get('resourceSpans', []):
-                if 'scopeSpans' in rs:
-                    rs['instrumentationLibrarySpans'] = rs.pop('scopeSpans')
+            # Normalize status.code values (string -> int)
+            STATUS_CODE_MAP = {
+                "STATUS_CODE_UNSET": 0,
+                "STATUS_CODE_OK": 1,
+                "STATUS_CODE_ERROR": 2
+            }
 
-            # 4) now POST JSON just like Node
+            for rs in body.get("resourceSpans", []):
+                if "scopeSpans" in rs:
+                    rs["instrumentationLibrarySpans"] = rs.pop("scopeSpans")
+                for ils in rs.get("instrumentationLibrarySpans", []):
+                    for span in ils.get("spans", []):
+                        code = span.get("status", {}).get("code")
+                        if isinstance(code, str) and code in STATUS_CODE_MAP:
+                            span["status"]["code"] = STATUS_CODE_MAP[code]
+
             resp = requests.post(self._endpoint, json=body, headers=self._headers, timeout=5)
             resp.raise_for_status()
             return SpanExportResult.SUCCESS
         except Exception:
             return SpanExportResult.FAILURE
-            
-    def shutdown(self):
-        return None
+    
+        def shutdown(self):
+            return None
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
+        def force_flush(self, timeout_millis: int = 30000) -> bool:
+            return True
 
 def instrument(
     app,

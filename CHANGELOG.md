@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Watchlog-monitoring/fastapi_apm_watchlog/compare/v1.0.2...v1.1.0) (2025-11-22)
+
+
+### Features
+
+* handle agent url ([c565e64](https://github.com/Watchlog-monitoring/fastapi_apm_watchlog/commit/c565e644a99e43e9c61aae207bfa8a3cc5c89335))
+
 ## [1.0.2](https://github.com/Watchlog-monitoring/fastapi_apm_watchlog/compare/v1.0.1...v1.0.2) (2025-07-28)
 
 

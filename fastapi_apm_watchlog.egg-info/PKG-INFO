@@ -1,6 +1,6 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: fastapi-apm-watchlog
-Version: 1.0.5
+Version: 1.1.0
 Summary: FastAPI instrumentation for Watchlog APM with JSON OTLP export
 Home-page: https://github.com/Watchlog-monitoring/fastapi_apm_watchlog
 Author: Mohammadreza
@@ -18,6 +18,16 @@ Requires-Dist: opentelemetry-exporter-otlp-proto-http>=1.9.0
 Requires-Dist: opentelemetry-instrumentation-fastapi>=0.34b0
 Requires-Dist: opentelemetry-instrumentation-requests>=0.34b0
 Requires-Dist: dnspython>=2.0.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
 
 # fastapi\_watchlog\_apm
 
@@ -93,7 +103,7 @@ async def read_root():
 | Parameter            | Type    | Default                     | Description                                                    |
 | -------------------- | ------- | --------------------------- | -------------------------------------------------------------- |
 | `service_name`       | `str`   | **required**                | Name of your FastAPI service                                   |
-| `otlp_endpoint`      | `str`   | `http://localhost:3774/apm` | Base OTLP URL (appends `/<service>/v1/traces` & `/v1/metrics`) |
+| `otlp_endpoint`      | `str`   | `http://localhost:3774/apm` | Base OTLP URL (overrides auto-detection if different from default) |
 | `headers`            | `dict`  | `{}`                        | Additional HTTP headers for OTLP requests                      |
 | `batch_max_size`     | `int`   | `200`                       | Max spans per batch                                            |
 | `batch_delay_ms`     | `int`   | `5000`                      | Delay (ms) between batch exports                               |
@@ -131,7 +141,9 @@ async def fetch_db():
 
 ## Environment Detection
 
-* **Local** (non‑K8s): sends to `http://127.0.0.1:3774/apm`
+The package automatically detects the runtime environment:
+
+* **Local** (non‑K8s): sends to `http://localhost:3774/apm`
 * **Kubernetes** (in‑cluster): sends to `http://watchlog-python-agent.monitoring.svc.cluster.local:3774/apm`
 
 Detection checks:
@@ -139,6 +151,103 @@ Detection checks:
 1. Kubernetes ServiceAccount token file
 2. `/proc/1/cgroup` for `kubepods`
 3. DNS lookup of `kubernetes.default.svc.cluster.local`
+
+**Manual Override:** You can override the endpoint by passing `otlp_endpoint` option in `instrument()` function
+
+---
+
+## Docker Setup
+
+When running your FastAPI app in Docker, you need to configure the correct agent endpoint.
+
+### Using otlp_endpoint Option (Recommended for Docker)
+
+```python
+# main.py
+from fastapi import FastAPI
+from fastapi_apm_watchlog import instrument
+
+app = FastAPI()
+
+# Initialize Watchlog APM with explicit agent URL for Docker
+instrument(
+    app,
+    service_name='my-fastapi-app',
+    otlp_endpoint='http://watchlog-agent:3774/apm',  # Use container name
+    error_tps=5,
+    send_error_spans=True,
+    slow_threshold_ms=300,
+    sample_rate=1.0
+)
+
+@app.get('/')
+async def read_root():
+    return {'message': 'Hello Watchlog APM + FastAPI'}
+
+# Run: uvicorn main:app --reload
+```
+
+**Docker Compose Example:**
+```yaml
+version: '3.8'
+
+services:
+  watchlog-agent:
+    image: watchlog/agent:latest
+    container_name: watchlog-agent
+    ports:
+      - "3774:3774"
+    environment:
+      - WATCHLOG_APIKEY=your-api-key
+      - WATCHLOG_SERVER=https://log.watchlog.ir
+    networks:
+      - app-network
+
+  fastapi-app:
+    build: .
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - watchlog-agent
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+**Docker Run Example:**
+```bash
+# 1. Create network
+docker network create app-network
+
+# 2. Run Watchlog Agent
+docker run -d \
+  --name watchlog-agent \
+  --network app-network \
+  -p 3774:3774 \
+  -e WATCHLOG_APIKEY="your-api-key" \
+  -e WATCHLOG_SERVER="https://log.watchlog.ir" \
+  watchlog/agent:latest
+
+# 3. Run FastAPI app (make sure your code sets otlp_endpoint='http://watchlog-agent:3774/apm')
+docker run -d \
+  --name fastapi-app \
+  --network app-network \
+  -p 8000:8000 \
+  my-fastapi-app
+```
+
+**Important Notes:**
+- When using Docker, use the container name as the hostname (e.g., `watchlog-agent`)
+- Both containers must be on the same Docker network
+- The agent must be running before your app starts
+- Set the `otlp_endpoint` option in your code to point to the agent container
+- If `otlp_endpoint` is not provided (or set to default), auto-detection will be used
 
 ---
 
